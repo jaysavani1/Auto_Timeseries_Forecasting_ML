@@ -71,3 +71,49 @@ from darts.datasets import (
     AirPassengersDataset,
     ElectricityDataset
 )
+
+class AutoUnivariateiTS:
+
+    def __init__(
+        self,
+        trace: bool = False
+    ) -> None:
+
+        self.TRACE = trace
+
+    def pandasdf_to_timeriesdata(
+        self,
+        data: pd.DataFrame,
+        target_column: List[str] = [],
+        index_col: str = None
+    ):
+        if not target_column:
+        if isinstance(data.index, pd.DatetimeIndex):
+            data = data.copy()
+            tseries = TimeSeries.from_dataframe(data, value_cols=data.columns)
+        
+        elif index_col:
+            data = data.copy().set_index(index_col)
+            tseries = TimeSeries.from_dataframe(data, value_cols=data.columns)
+
+        else:
+            raise ValueError("""
+            Invalid index column. Set valid index column using 'index_col' parameter !!!
+            """)
+        else:
+        if isinstance(data.index, pd.DatetimeIndex):
+            data = data.copy()
+            tseries = TimeSeries.from_dataframe(data, value_cols=target_column)
+        
+        elif index_col:
+            data = data.copy().set_index(index_col)
+            tseries = TimeSeries.from_dataframe(data, value_cols=target_column)
+
+        else:
+            raise ValueError("""
+            Invalid index column. Set valid index column using 'index_col' parameter !!!
+            """)
+        self._data = tseries
+        return tseries
+
+    

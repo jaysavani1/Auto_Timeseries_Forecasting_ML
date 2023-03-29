@@ -183,12 +183,12 @@ class AutoUnivariateiTS:
         return train, val
 
     def fit_predict(
-    self,
-    train_data: darts.timeseries.TimeSeries,
-    val_data: darts.timeseries.TimeSeries,
-    select_model: List[str] = [],
-    select_all_models: bool = True,
-    seasonality_check: bool = True
+        self,
+        train_data: darts.timeseries.TimeSeries,
+        val_data: darts.timeseries.TimeSeries,
+        select_model: List[str] = [],
+        select_all_models: bool = True,
+        seasonality_check: bool = True
     ):
         if (not select_model) and (not select_all_models):
         raise ValueError("""
@@ -247,5 +247,16 @@ class AutoUnivariateiTS:
             print(f"Trial Finished... Total time taken:{res_time} sec")
 
             return results
+    
+        pbar = tqdm(self.selected_models.items())
+        self._model_predictions = [_run_model(model_name = m_name, model = model) for m_name, model in pbar]
         
+        # Prepare Performance Metrics
+        res = pd.DataFrame(columns=['MAE', 'MAPE', 'R squared', 'RMSE', 'RMSLE', 'time'])
+        for i in range(len(self._model_predictions)):
+        res = pd.concat([res, pd.DataFrame(self._model_predictions[i][1]).T])
+        pd.set_option("display.precision",3)
+        res.style.highlight_min(color="blue", axis=0).highlight_max(color="red", axis=0)
+        
+        return res
         

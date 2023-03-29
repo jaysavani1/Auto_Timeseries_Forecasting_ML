@@ -116,4 +116,23 @@ class AutoUnivariateiTS:
         self._data = tseries
         return tseries
 
+    def timeriesdata_to_pandasdf(
+        self,
+        data: darts.timeseries.TimeSeries,
+        reset_index: bool = False
+    ):
+        
+        if not reset_index:
+        pdf = data.pd_dataframe()
+        else:
+        pdf = data.pd_dataframe().reset_index()
+        
+        return pdf
+
+    def timeriesdata_to_pdseries(
+        self,
+        data: darts.timeseries.TimeSeries,
+    ):
+        pdseries = data.pd_series()
+        return pdseries
     

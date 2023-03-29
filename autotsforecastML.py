@@ -162,9 +162,9 @@ class AutoUnivariateiTS:
             pd.DataFrame: Return pandas dataframe object.
         """
         if not reset_index:
-        pdf = data.pd_dataframe()
+            pdf = data.pd_dataframe()
         else:
-        pdf = data.pd_dataframe().reset_index()
+            pdf = data.pd_dataframe().reset_index()
         
         return pdf
 

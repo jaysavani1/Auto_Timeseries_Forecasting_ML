@@ -357,3 +357,27 @@ class AutoUnivariateiTS:
             df_desc = pd.concat([df_desc, resid.pd_dataframe().describe()], axis=1)
             plot_residuals_analysis(resid);
             plt.title(list(self._model_predictions[i][1].keys())[0])
+
+    def predict(
+        self,
+        model
+    ):
+        # TO DO: add prediction functionality
+        pass
+    
+    def save_model(
+        self,
+        model_list: List[str] = None,
+        all: bool = true
+    ):
+        # TO DO: add save model functionality for more than one model
+        pass
+    
+    @classmethod
+    def load_model(
+        cls
+    ):
+        # TO Do: add load model functionality for saved models
+        pass
+    
+    # ====================== TO DO: Additional functionlaities ======================

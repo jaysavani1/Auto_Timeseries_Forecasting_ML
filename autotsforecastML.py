@@ -290,6 +290,27 @@ class AutoUnivariateiTS:
                 stepwise = True, 
                 suppress_warnings = True, error_action = "trace", trace = True, with_intercept = "auto")
             return auto_arima_model
+        
+        def _get_theta():
+            # search space for best theta value: check 100 alternatives
+            thetas = 2 - np.linspace(-10, 10, 100)
+
+            # initialize search
+            best_mape = float('inf')
+            best_theta = 0
+            # search for best theta among 50 values, as measured by MAPE
+            for theta in thetas:
+                model = Theta(theta)
+                res = model.fit(self.train)
+                pred_theta = model.predict(len(self.val))
+                res_mape = mape(self.val, pred_theta)
+
+                if res_mape < best_mape:
+                    best_mape = res_mape
+                    best_theta = theta
+
+            theta_model = Theta(best_theta)   # best theta model among 100
+            return theta_model
 
         _DEFAULT_MODELS = {
             'auto arima' : _get_auto_arima(),

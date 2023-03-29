@@ -135,4 +135,23 @@ class AutoUnivariateiTS:
     ):
         pdseries = data.pd_series()
         return pdseries
-    
+
+    def seasonality_check(
+        self,
+        data,
+        seasonality_start: int = 2,
+        seasonality_end: int = 50,
+        alpha = 0.05,
+        print_summary: bool = True
+    ):
+        self.ALPHA = alpha
+        for m in range(seasonality_start, seasonality_end):
+        is_seasonal, MSEAS = check_seasonality(data, m=m, alpha=alpha)
+        if is_seasonal:
+            break
+        self.is_seasonal = is_seasonal
+        self.MSEAS = MSEAS
+        if print_summary:
+        print(f"Is provided data seasonal? :{self.is_seasonal}")
+        if self.is_seasonal:
+            print(f"There is seasonality of order {self.MSEAS}")  

@@ -343,3 +343,17 @@ class AutoUnivariateiTS:
             ax[i].set_title(f"\n\n {list(self._model_predictions[i][1].keys())[0]} : MAPE {mape_model:0.1f}% - time {time_model:0.2f}sec")
         ax[i].set_xlabel("")
         ax[i].legend(loc = 'upper right')
+        
+    def plot_residual_diagnostics(
+        self
+    ):
+        # investigate the residuals in the validation dataset
+        act = self.val
+        df_desc = pd.DataFrame()
+
+        for i in range(len(self._model_predictions)):
+            pred = self._model_predictions[i][0]
+            resid = pred - act
+            df_desc = pd.concat([df_desc, resid.pd_dataframe().describe()], axis=1)
+            plot_residuals_analysis(resid);
+            plt.title(list(self._model_predictions[i][1].keys())[0])

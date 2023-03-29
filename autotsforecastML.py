@@ -184,11 +184,11 @@ class AutoUnivariateiTS:
 
     def fit_predict(
     self,
-    train_data,
-    val_data,
+    train_data: darts.timeseries.TimeSeries,
+    val_data: darts.timeseries.TimeSeries,
     select_model: List[str] = [],
-    select_all_models = True,
-    seasonality_check = True
+    select_all_models: bool = True,
+    seasonality_check: bool = True
     ):
         if (not select_model) and (not select_all_models):
         raise ValueError("""
@@ -205,3 +205,47 @@ class AutoUnivariateiTS:
         self.seasonality_check(self._data)
         self.selected_models = self.selecting_models(select_model) if select_model else self.selecting_models()
     
+        # Evaluate model performance
+        def _run_model(
+            model_name: str, 
+            model
+        ):
+        
+            pbar.set_description("Processing %s" % model_name)
+            t_start =  perf_counter()
+            print(f"\n======================={model_name.upper()} - MDOEL SUMMARY=======================")
+
+            print(f"\nModel parameters: {str(model)}")
+
+            # fit the model and compute predictions
+            res = model.fit(self.train)
+            forecast = model.predict(len(self.val))
+
+            if seasonality_check:
+                # for naive forecast, concatenate seasonal fc with drift fc
+                if model_name == 'naive drift':
+                    if self.is_seasonal:
+                        fc_drift = forecast
+                        modelS = NaiveSeasonal(K=self.MSEAS)
+                        modelS.fit(self.train)
+                        fc_seas = modelS.predict(len(self.val))
+                        forecast = fc_drift + fc_seas - self.train.last_value()
+                res_time = perf_counter() - t_start
+            
+            print(f"Calculating Error Metrics:..")
+
+            # compute accuracy metrics and processing time
+            res_mape = mape(self.val, forecast)
+            res_mae = mae(self.val, forecast)
+            res_r2 = r2_score(self.val, forecast)
+            res_rmse = rmse(self.val, forecast)
+            res_rmsle = rmsle(self.val, forecast)
+            res_time = perf_counter() - t_start
+            res_accuracy = {"MAPE":res_mape, "MAE":res_mae, "R squared":-res_r2, "RMSE":res_rmse, "RMSLE":res_rmsle, "time":res_time}
+            results = [forecast, {model_name : res_accuracy}]
+            
+            print(f"Trial Finished... Total time taken:{res_time} sec")
+
+            return results
+        
+        

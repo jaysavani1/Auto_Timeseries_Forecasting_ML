@@ -154,4 +154,30 @@ class AutoUnivariateiTS:
         if print_summary:
         print(f"Is provided data seasonal? :{self.is_seasonal}")
         if self.is_seasonal:
-            print(f"There is seasonality of order {self.MSEAS}")  
+            print(f"There is seasonality of order {self.MSEAS}")
+
+    def train_test_split_data(
+        self,
+        data: darts.timeseries.TimeSeries,
+        spliting_at: Union[pd.Timestamp, int, float],
+        split_before: bool = True,
+        plot: bool = True,
+        plot_size = (12, 5),
+        legend_loc = 'upper right'
+    ):
+        # split position: if string, then interpret as Timestamp
+        # if int, then interpretation as index
+        # if loat, then interpretation as %split
+
+        if isinstance(spliting_at, numbers.Number):
+        split_at = spliting_at
+        else:
+            split_at = pd.Timestamp(spliting_at)
+        train, val = data.split_before(split_at)
+        if plot:
+        plt.figure(101, figsize = plot_size)
+        train.plot(label ='training')
+        val.plot(label ='validation')
+        plt.legend(loc = legend_loc)
+        
+        return train, val

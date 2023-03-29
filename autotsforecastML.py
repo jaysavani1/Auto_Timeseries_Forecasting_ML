@@ -181,3 +181,27 @@ class AutoUnivariateiTS:
         plt.legend(loc = legend_loc)
         
         return train, val
+
+    def fit_predict(
+    self,
+    train_data,
+    val_data,
+    select_model: List[str] = [],
+    select_all_models = True,
+    seasonality_check = True
+    ):
+        if (not select_model) and (not select_all_models):
+        raise ValueError("""
+            'select_model' should not be empty list. Select atleast one model or use 'select_all_models' = True !!!
+        """)
+        
+        # elif select_model and select_all_models:
+        #   raise ValueError("""
+        #     Can not use both 'select_model' and 'select_all_models' = True at the same time. Parameter 'select_all_models' should be set to False !!!
+        #   """)
+        # else:
+        self.train = train_data
+        self.val = val_data
+        self.seasonality_check(self._data)
+        self.selected_models = self.selecting_models(select_model) if select_model else self.selecting_models()
+    

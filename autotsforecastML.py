@@ -265,6 +265,31 @@ class AutoUnivariateiTS:
         model_list: List[str] = None, 
         all: bool = True
     ):
+        def _get_auto_arima():
+            y = np.asarray(self.timeriesdata_to_pdseries(data = self._data))
+            # get order of first differencing: the higher of KPSS and ADF test results
+            n_kpss = pmd.arima.ndiffs(y, alpha = self.ALPHA, test='kpss', max_d=2)
+            n_adf = pmd.arima.ndiffs(y, alpha = self.ALPHA, test='adf', max_d=2)
+            n_diff = max(n_adf, n_kpss)
+
+            # get order of seasonal differencing: the higher of OCSB and CH test results
+            n_ocsb = pmd.arima.OCSBTest(m=max(4,self.MSEAS)).estimate_seasonal_differencing_term(y)
+            n_ch = pmd.arima.CHTest(m=max(4,self.MSEAS)).estimate_seasonal_differencing_term(y)
+            ns_diff = max(n_ocsb, n_ch, self.is_seasonal * 1)
+
+            # set up the ARIMA forecaster
+            auto_arima_model = AutoARIMA(
+                start_p=1, d = n_diff, start_q = 1,
+                max_p = 4, max_d = n_diff, max_q = 4,
+                start_P = 0, D = ns_diff, start_Q = 0, m = max(4,self.MSEAS), seasonal = self.is_seasonal,
+                max_P = 3, max_D = 1, max_Q = 3,
+                max_order = 5,                       # p+q+p+Q <= max_order
+                stationary = False, 
+                information_criterion = "bic", alpha = self.ALPHA, 
+                test="kpss", seasonal_test="ocsb",
+                stepwise = True, 
+                suppress_warnings = True, error_action = "trace", trace = True, with_intercept = "auto")
+            return auto_arima_model
 
         _DEFAULT_MODELS = {
             'auto arima' : _get_auto_arima(),

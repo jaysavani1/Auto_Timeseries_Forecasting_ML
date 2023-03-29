@@ -260,3 +260,23 @@ class AutoUnivariateiTS:
         
         return res
         
+    def selecting_models(
+        self, 
+        model_list: List[str] = None, 
+        all: bool = True
+    ):
+
+        _DEFAULT_MODELS = {
+            'auto arima' : _get_auto_arima(),
+            'exponential smoothing' : ExponentialSmoothing(seasonal_periods= self.MSEAS) if self.is_seasonal else ExponentialSmoothing(),
+            'theta' : _get_theta(),
+            'naive drift' : NaiveDrift(),
+            'prophet (additive seasonality)' : Prophet(seasonality_mode='additive'),
+            'prophet (multiplicative seasonality)': Prophet(seasonality_mode='multiplicative')
+        }
+
+        if all:
+        return _DEFAULT_MODELS
+        else:
+        filter_model_selection = {k:v for k,v in _DEFAULT_MODELS.items() if k in model_list}
+        return filter_model_selection

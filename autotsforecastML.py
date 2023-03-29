@@ -326,3 +326,20 @@ class AutoUnivariateiTS:
         else:
         filter_model_selection = {k:v for k,v in _DEFAULT_MODELS.items() if k in model_list}
         return filter_model_selection
+
+    def plot_fit_predict(
+        self,
+    ):
+        # plot the forecasts
+        pairs = math.ceil(len(self.selected_models)/2)                    # how many rows of charts
+        fig, ax = plt.subplots(pairs, 2, figsize=(20, 5 * pairs))
+        ax = ax.ravel()
+        
+        for i in range(len(self._model_predictions)):
+            self.val.plot(label="actual", ax=ax[i])
+            self._model_predictions[i][0].plot(label= f"predicted", ax=ax[i], color = "green") 
+            mape_model =  list(self._model_predictions[i][1].values())[0]['MAPE']
+            time_model =  list(self._model_predictions[i][1].values())[0]['time']
+            ax[i].set_title(f"\n\n {list(self._model_predictions[i][1].keys())[0]} : MAPE {mape_model:0.1f}% - time {time_model:0.2f}sec")
+        ax[i].set_xlabel("")
+        ax[i].legend(loc = 'upper right')

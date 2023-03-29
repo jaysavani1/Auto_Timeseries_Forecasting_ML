@@ -24,4 +24,3 @@ class a:
             # some code
         # some code
 """
-

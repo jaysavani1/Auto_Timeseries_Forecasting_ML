@@ -73,6 +73,28 @@ from darts.datasets import (
 )
 
 class AutoUnivariateiTS:
+    """This class helps users to implement multiple SOTA statistical time series forecasting models.
+    
+    Description:
+    -----------
+
+        Supported Methods:
+        -----------------
+            - pandasdf_to_timeriesdata(**kwargs) : Convert pandas dataframe to dtype timeries data.
+            - timeriesdata_to_pandasdf(**kwargs) : Convert dtype timeries data to pandas dataframe.
+            - timeriesdata_to_pdseries(**kwargs) : Convert dtype timeries data to pandas series.
+            - seasonality_check(**kwargs)        : Check if there is any seasonality present in given timeseries.
+            - train_test_split_data(**kwargs)    : Split data into training and validation set to perform model forecasting.
+            - fit_predict(**kwargs)              : Produce accuracy metrics for the selected or all default models.
+            - plot_fit_predict(**kwargs)         : Plot the predictions derived by fit_predict().
+            - plot_residual_diagnostics(**kwargs): Create various visualizations based on models to study residuals.
+        
+        Future Methods:
+        --------------
+            - predict(**kwargs)    : predict the future timestamps.
+            - save_model(**kwargs) : Save the model.
+            - load_model(**kwargs) : Load the saved model.
+    """
 
     def __init__(
         self,
@@ -87,32 +109,41 @@ class AutoUnivariateiTS:
         target_column: List[str] = [],
         index_col: str = None
     ):
+         """Convert pandas dataframe to dtype timeries data.
+
+        Args:
+            data (pd.DataFrame): Enter pandas dataframe.
+            target_column (List[str]): Enter the target or dependent(y) column inside a list. Defaults to Empty list.
+
+        Returns:
+            darts.timeseries.TimeSeries: return timeseries data object from darts.
+        """
         if not target_column:
-        if isinstance(data.index, pd.DatetimeIndex):
-            data = data.copy()
-            tseries = TimeSeries.from_dataframe(data, value_cols=data.columns)
-        
-        elif index_col:
-            data = data.copy().set_index(index_col)
-            tseries = TimeSeries.from_dataframe(data, value_cols=data.columns)
+            if isinstance(data.index, pd.DatetimeIndex):
+                data = data.copy()
+                tseries = TimeSeries.from_dataframe(data, value_cols=data.columns)
+            
+            elif index_col:
+                data = data.copy().set_index(index_col)
+                tseries = TimeSeries.from_dataframe(data, value_cols=data.columns)
 
+            else:
+                raise ValueError("""
+                    Invalid index column. Set valid index column using 'index_col' parameter !!!
+                """)
         else:
-            raise ValueError("""
-            Invalid index column. Set valid index column using 'index_col' parameter !!!
-            """)
-        else:
-        if isinstance(data.index, pd.DatetimeIndex):
-            data = data.copy()
-            tseries = TimeSeries.from_dataframe(data, value_cols=target_column)
-        
-        elif index_col:
-            data = data.copy().set_index(index_col)
-            tseries = TimeSeries.from_dataframe(data, value_cols=target_column)
+            if isinstance(data.index, pd.DatetimeIndex):
+                data = data.copy()
+                tseries = TimeSeries.from_dataframe(data, value_cols=target_column)
+            
+            elif index_col:
+                data = data.copy().set_index(index_col)
+                tseries = TimeSeries.from_dataframe(data, value_cols=target_column)
 
-        else:
-            raise ValueError("""
-            Invalid index column. Set valid index column using 'index_col' parameter !!!
-            """)
+            else:
+                raise ValueError("""
+                    Invalid index column. Set valid index column using 'index_col' parameter !!!
+                """)
         self._data = tseries
         return tseries
 
@@ -121,7 +152,15 @@ class AutoUnivariateiTS:
         data: darts.timeseries.TimeSeries,
         reset_index: bool = False
     ):
-        
+        """Convert dtype timeries data to pandas dataframe.
+
+        Args:
+            data (darts.timeseries.TimeSeries): Enter darts or xarray time series data object.
+            reset_index (bool, optional): Reset index on conveted pandas dataframe. Defaults to False.
+
+        Returns:
+            pd.DataFrame: Return pandas dataframe object.
+        """
         if not reset_index:
         pdf = data.pd_dataframe()
         else:
@@ -133,28 +172,46 @@ class AutoUnivariateiTS:
         self,
         data: darts.timeseries.TimeSeries,
     ):
+        """Convert dtype timeries data to pandas series.
+
+        Args:
+            data (darts.timeseries.TimeSeries): Enter darts or xarray time series data object.
+
+        Returns:
+            pd.series: Return pandas series object.
+        """
         pdseries = data.pd_series()
         return pdseries
 
     def seasonality_check(
         self,
-        data,
+        data: darts.timeseries.TimeSeries,
         seasonality_start: int = 2,
         seasonality_end: int = 50,
         alpha = 0.05,
         print_summary: bool = True
     ):
+        """Check if there is any seasonality present in given timeseries.
+
+        Args:
+            data (darts.timeseries.TimeSeries): Enter darts timeseries data object.
+            seasonality_start (int, optional): Enter starting range value to perform seasoanlity check. Defaults to 2.
+            seasonality_end (int, optional): Enter ending range value to perform seasoanlity check. Defaults to 50.
+            alpha (float, optional): Enter the significance confidence interval. Defaults to 0.05.
+            print_summary (bool, optional): Print out the summary results. Defaults to True.
+        """
+        
         self.ALPHA = alpha
         for m in range(seasonality_start, seasonality_end):
-        is_seasonal, MSEAS = check_seasonality(data, m=m, alpha=alpha)
-        if is_seasonal:
-            break
+            is_seasonal, MSEAS = check_seasonality(data, m=m, alpha=alpha)
+            if is_seasonal:
+                break
         self.is_seasonal = is_seasonal
         self.MSEAS = MSEAS
         if print_summary:
-        print(f"Is provided data seasonal? :{self.is_seasonal}")
-        if self.is_seasonal:
-            print(f"There is seasonality of order {self.MSEAS}")
+            print(f"Is provided data seasonal? :{self.is_seasonal}")
+            if self.is_seasonal:
+                print(f"There is seasonality of order {self.MSEAS}")
 
     def train_test_split_data(
         self,
@@ -165,20 +222,37 @@ class AutoUnivariateiTS:
         plot_size = (12, 5),
         legend_loc = 'upper right'
     ):
+        """_summary_
+
+        Args:
+            data (darts.timeseries.TimeSeries): Enter darts timeseries data object.
+            spliting_at (Union[pd.Timestamp, int, float]): Split the data either from perticular timestamp, or enter proportion of splitting ratio.
+                - split position: if string, then interpret as Timestamp
+                - if int, then interpretation as index
+                - if loat, then interpretation as %split
+            split_before (bool, optional): Splitting data either before (if True) or after (False) 'splitin_at'. Defaults to True.
+            plot (bool, optional): Show plot for the training and validation set. Defaults to True.
+            plot_size (tuple, optional): Tuple object for plot size (from matplotlib). Defaults to (12, 5).
+            legend_loc (str, optional): Set location of the legend in the plot. Defaults to 'upper right'.
+
+        Returns:
+            training data, validation data: return training and validation dataset.
+        """
+        
         # split position: if string, then interpret as Timestamp
         # if int, then interpretation as index
         # if loat, then interpretation as %split
 
         if isinstance(spliting_at, numbers.Number):
-        split_at = spliting_at
+            split_at = spliting_at
         else:
             split_at = pd.Timestamp(spliting_at)
         train, val = data.split_before(split_at)
         if plot:
-        plt.figure(101, figsize = plot_size)
-        train.plot(label ='training')
-        val.plot(label ='validation')
-        plt.legend(loc = legend_loc)
+            plt.figure(101, figsize = plot_size)
+            train.plot(label ='training')
+            val.plot(label ='validation')
+            plt.legend(loc = legend_loc)
         
         return train, val
 
@@ -190,10 +264,22 @@ class AutoUnivariateiTS:
         select_all_models: bool = True,
         seasonality_check: bool = True
     ):
+        """Produce accuracy metrics for the selected or all default models.
+
+        Args:
+            train_data (darts.timeseries.TimeSeries): Enter darts timeseries data object.
+            val_data (darts.timeseries.TimeSeries): Enter darts timeseries data object.
+            select_model (List[str]) : Enter list of model names as string. Defaults to [].
+            select_all_models (bool) : Select all the available models. Defaults to True.
+            seasonality_check (bool) : Call Seasonality_check() method to perform seasonality check. Defaults to True.
+
+        Returns:
+            pd.DataFrame: Return accuracy metrics of all selected models.
+        """       
         if (not select_model) and (not select_all_models):
-        raise ValueError("""
-            'select_model' should not be empty list. Select atleast one model or use 'select_all_models' = True !!!
-        """)
+            raise ValueError("""
+                'select_model' should not be empty list. Select atleast one model or use 'select_all_models' = True !!!
+            """)
         
         # elif select_model and select_all_models:
         #   raise ValueError("""
@@ -210,7 +296,7 @@ class AutoUnivariateiTS:
             model_name: str, 
             model
         ):
-        
+
             pbar.set_description("Processing %s" % model_name)
             t_start =  perf_counter()
             print(f"\n======================={model_name.upper()} - MDOEL SUMMARY=======================")
@@ -254,7 +340,7 @@ class AutoUnivariateiTS:
         # Prepare Performance Metrics
         res = pd.DataFrame(columns=['MAE', 'MAPE', 'R squared', 'RMSE', 'RMSLE', 'time'])
         for i in range(len(self._model_predictions)):
-        res = pd.concat([res, pd.DataFrame(self._model_predictions[i][1]).T])
+            res = pd.concat([res, pd.DataFrame(self._model_predictions[i][1]).T])
         pd.set_option("display.precision",3)
         res.style.highlight_min(color="blue", axis=0).highlight_max(color="red", axis=0)
         
@@ -265,6 +351,7 @@ class AutoUnivariateiTS:
         model_list: List[str] = None, 
         all: bool = True
     ):
+        
         def _get_auto_arima():
             y = np.asarray(self.timeriesdata_to_pdseries(data = self._data))
             # get order of first differencing: the higher of KPSS and ADF test results
@@ -322,14 +409,16 @@ class AutoUnivariateiTS:
         }
 
         if all:
-        return _DEFAULT_MODELS
+            return _DEFAULT_MODELS
         else:
-        filter_model_selection = {k:v for k,v in _DEFAULT_MODELS.items() if k in model_list}
+            filter_model_selection = {k:v for k,v in _DEFAULT_MODELS.items() if k in model_list}
         return filter_model_selection
 
     def plot_fit_predict(
         self,
     ):
+        """Plot the predictions derived by fit_predict().
+        """
         # plot the forecasts
         pairs = math.ceil(len(self.selected_models)/2)                    # how many rows of charts
         fig, ax = plt.subplots(pairs, 2, figsize=(20, 5 * pairs))
@@ -347,6 +436,8 @@ class AutoUnivariateiTS:
     def plot_residual_diagnostics(
         self
     ):
+        """Create various visualizations based on models to study residuals.
+        """
         # investigate the residuals in the validation dataset
         act = self.val
         df_desc = pd.DataFrame()
